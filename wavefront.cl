@@ -4,6 +4,89 @@
 #define DIST 2.0f
 
 
+// id of time and total number of items
+int ray_O_x (int id, int n){
+	return id;
+}int ray_O_y (int id, int n){
+	return id + n;
+}
+int ray_O_z (int id, int n){
+	return id + n * 2;
+}
+int ray_D_x (int id, int n){
+	return id + n * 3;
+}
+int ray_D_y (int id, int n){
+	return id + n * 4;
+}
+int ray_D_z (int id, int n){
+	return id + n * 5;
+}
+int ray_t (int id, int n){
+	return id + n * 6;
+}
+
+
+
+
+
+
+__kernel void generate_primary_rays(__global float * rays, __global int * dims, float3 E, float d, float3 V)
+{
+
+	int idx = get_global_id(0);
+	int idy = get_global_id(1);
+
+
+	int id = idx + idy * dims[1];
+
+
+	float3 center = E + d * V;
+
+
+	float3 P0 = center + (float3)(-1, 1, 0);
+	float3 P1 = center + (float3)(1, 1, 0);
+	float3 P2 = center + (float3)(-1, -1, 0);
+
+
+	float u = (float)idx / dims[0];
+	float v = (float)idy / dims[1];
+	float3 O = P0 + u * (P1 - P0) + v * (P2 - P0);
+	float3 D = O - E;
+
+
+	D = normalize(D);
+
+
+	// save O
+
+	rays[ray_O_x(id, dims[2])] = O.x;
+	rays[ray_O_y(id, dims[2])] = O.y;
+	rays[ray_O_z(id, dims[2])] = O.z;
+
+	rays[ray_D_x(id, dims[2])] = D.x;
+	rays[ray_D_y(id, dims[2])] = D.y;
+	rays[ray_D_z(id, dims[2])] = D.z;
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 __kernel void device_function(write_only image2d_t a)
 {
 	
@@ -91,44 +174,3 @@ __kernel void device_function(write_only image2d_t a)
 }
 
 
-
-
-
-__kernel void generate_rays(float3 E, float d, float3 V)
-{
-
-	int idx = get_global_id(0);
-	int idy = get_global_id(1);
-
-
-
-	float3 center = E + d * V;
-
-
-	float3 P0 = center + (float3)(-1, 1, 0);
-	float3 P1 = center + (float3)(1, 1, 0);
-	float3 P2 = center + (float3)(-1, -1, 0);
-
-
-	float u = (float)idx;
-	float v = (float)idy;
-	float3 Puv = P0 + u * (P1 - P0) + v * (P2 - P0);
-	float3 D = Puv - E;
-
-
-
-}
-
-
-
-__kernel void i_accept_floats(float* f) 
-{
-	int id = get_global_id(0);
-
-	if (id == 0) {
-	
-		f = float[100];
-	
-	}
-
-}

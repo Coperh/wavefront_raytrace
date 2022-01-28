@@ -7,7 +7,6 @@ using Cloo;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 
-using template;
 
 namespace Template {
 
@@ -25,7 +24,7 @@ namespace Template {
 		OpenCLKernel kernel = new OpenCLKernel( ocl, "device_function" );
 
 
-		OpenCLKernel generate_rays = new OpenCLKernel(ocl, "generate_rays");
+		OpenCLKernel generate_primary_rays = new OpenCLKernel(ocl, "generate_primary_rays");
 
 		//static int width = 100;
 
@@ -47,9 +46,7 @@ namespace Template {
 		OpenCLImage<int> image = new OpenCLImage<int>(ocl, width, height);
 
 
-		OpenCLBuffer<Ray> rays = new OpenCLBuffer<Ray>(ocl, width * height);
-
-		OpenCLBuffer<float> floats;
+		
 
 
 		Stopwatch timer = new Stopwatch();
@@ -57,6 +54,12 @@ namespace Template {
 
 
 
+
+
+		OpenCLBuffer<float> primary_rays = new OpenCLBuffer<float>(ocl, width * height * 6);
+
+
+		OpenCLBuffer<int> dims = new OpenCLBuffer<int>(ocl, 3);
 
 		static float3 E = new float3(0, 10f, 0), V = new float3(0, 0, 1f);
 		static float d = 2;
@@ -69,13 +72,39 @@ namespace Template {
 		{
 			// nothing here
 
-			OpenCLKernel i_accept_floats = new OpenCLKernel(ocl, "i_accept_floats");
 
-			i_accept_floats.SetArgument(0, floats);
+			dims[0] = width;
+			dims[1] = height;
+			dims[2] = width * height;
 
-			long[] workSize = { 100, 1 };
 
-			i_accept_floats.Execute(workSize);
+			//generate rays
+
+
+
+			primary_rays.CopyToDevice();
+			dims.CopyToDevice();
+
+
+			generate_primary_rays.SetArgument(0, primary_rays);
+			generate_primary_rays.SetArgument(1, dims);
+
+			generate_primary_rays.SetArgument(2, E);
+			generate_primary_rays.SetArgument(3, d);
+			generate_primary_rays.SetArgument(4, V);
+
+
+
+			long[] workSize = { width, height };
+			long[] localSize = { 16, 16 };
+
+
+
+			generate_primary_rays.Execute(workSize, localSize);
+
+
+			//Console.WriteLine(screen.width);
+			//Console.WriteLine(screen.height);
 
 		}
 		public void Tick()
@@ -90,7 +119,7 @@ namespace Template {
 
 
 			long[] workSize = { width, height };
-			long[] localSize = { 32, 16 };
+			long[] localSize = { 16, 16 };
 
 
 			
@@ -104,20 +133,7 @@ namespace Template {
 			
 
 
-			//generate rays
-			/*
-			generate_rays.SetArgument(0, E);
-			generate_rays.SetArgument(1, d);
-			generate_rays.SetArgument(2, V);
-
-			rays.CopyToDevice();
-
-
-			generate_rays.Execute(workSize, localSize);
-			*/
-
-			//Console.WriteLine(screen.width);
-			//Console.WriteLine(screen.height);
+			
 
 
 
