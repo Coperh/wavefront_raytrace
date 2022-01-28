@@ -37,7 +37,7 @@ __kernel void generate_primary_rays(__global float * rays, __global int * dims, 
 	int idx = get_global_id(0);
 	int idy = get_global_id(1);
 
-	int id = idx + idy * dims[1];
+	int id = idx + idy * dims[0];
 
 	float3 center = E + d * V;
 
@@ -80,7 +80,7 @@ __kernel void cast_rays(__global float * rays, __global int * dims, write_only i
 	int idx = get_global_id(0);
 	int idy = get_global_id(1);
 
-	int id = idx + idy * dims[1];
+	int id = idx + idy * dims[0];
 
 
 
