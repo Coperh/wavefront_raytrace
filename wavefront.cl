@@ -37,9 +37,7 @@ __kernel void generate_primary_rays(__global float * rays, __global int * dims, 
 	int idx = get_global_id(0);
 	int idy = get_global_id(1);
 
-
 	int id = idx + idy * dims[1];
-
 
 	float3 center = E + d * V;
 
@@ -69,6 +67,87 @@ __kernel void generate_primary_rays(__global float * rays, __global int * dims, 
 	rays[ray_D_z(id, dims[2])] = D.z;
 
 
+}
+
+
+
+
+
+
+__kernel void cast_rays(__global float * rays, __global int * dims, write_only image2d_t a)
+{
+
+	int idx = get_global_id(0);
+	int idy = get_global_id(1);
+
+	int id = idx + idy * dims[1];
+
+
+
+	//int2 imd = get_image_dim(a);
+	//printf("%d %d\n", imd.x, imd.y );
+
+
+	float3 O = (float3) (
+		rays[ray_O_x(id, dims[2])],
+		rays[ray_O_y(id, dims[2])],
+		rays[ray_O_z(id, dims[2])]
+		);
+
+
+	float3 D = (float3) (
+		rays[ray_D_x(id, dims[2])],
+		rays[ray_D_y(id, dims[2])],
+		rays[ray_D_z(id, dims[2])]
+		);
+
+
+
+		// sphere
+	float t = 0;
+	float r2 = 25; // radius of 5
+	float3 pos = (float3)(0, 10, 20);
+	float4 col = (float4)(1, 0, 0, 1);
+
+	int2 pix = (int2)(idx, idy);
+
+	// intersect circle
+
+	float3 C = pos - O;
+
+	//printf("X:%f Y:%f Z:%f\n", C.x, C.y, C.z);
+
+	t = dot(C, D);
+
+
+
+	float3 Q = C - t * D;
+	float p2 = dot(Q, Q);
+
+
+
+	//printf("%f %f\n", r2, p2);
+
+	if (p2 > r2) {
+		write_imagef(a, pix, 0.f);
+		return; 
+	}
+	
+
+
+	t -= sqrt(r2 - p2);
+
+	//printf("test\n");
+
+	// display pixel
+
+	if (t <= 0) {
+		write_imagef(a, pix, 0.f);
+		return;
+	}
+		
+	write_imagef(a, pix, col);
+
 
 
 
@@ -84,8 +163,7 @@ __kernel void generate_primary_rays(__global float * rays, __global int * dims, 
 
 
 
-
-
+// old stuff
 
 __kernel void device_function(write_only image2d_t a)
 {

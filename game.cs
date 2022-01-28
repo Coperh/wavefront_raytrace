@@ -26,6 +26,8 @@ namespace Template {
 
 		OpenCLKernel generate_primary_rays = new OpenCLKernel(ocl, "generate_primary_rays");
 
+		OpenCLKernel cast_rays = new OpenCLKernel(ocl, "cast_rays");
+
 		//static int width = 100;
 
 
@@ -33,7 +35,7 @@ namespace Template {
 		//OpenCLBuffer<int> buffer = new OpenCLBuffer<int>( ocl, width * width);
 
 
-		
+
 
 
 
@@ -103,6 +105,10 @@ namespace Template {
 			generate_primary_rays.Execute(workSize, localSize);
 
 
+			cast_rays.SetArgument(0, primary_rays);
+			cast_rays.SetArgument(1, dims);
+			cast_rays.SetArgument(2, image);
+
 			//Console.WriteLine(screen.width);
 			//Console.WriteLine(screen.height);
 
@@ -111,7 +117,7 @@ namespace Template {
 		{
 			GL.Finish();
 			// clear the screen
-			screen.Clear( 0 );
+			screen.Clear(0);
 
 
 
@@ -122,18 +128,33 @@ namespace Template {
 			long[] localSize = { 16, 16 };
 
 
-			
-			// lock the OpenGL texture for use by OpenCL
-			kernel.LockOpenGLObject(image.texBuffer);
-			// execute the kernel
-			kernel.Execute(workSize, localSize);
-			// unlock the OpenGL texture so it can be used for drawing a quad
-			kernel.UnlockOpenGLObject(image.texBuffer);
-
-			
 
 
-			
+			if (false)
+			{
+				kernel.SetArgument(0, image);
+				// lock the OpenGL texture for use by OpenCL
+				kernel.LockOpenGLObject(image.texBuffer);
+				// execute the kernel
+				kernel.Execute(workSize, localSize);
+				// unlock the OpenGL texture so it can be used for drawing a quad
+				kernel.UnlockOpenGLObject(image.texBuffer);
+			}
+			else {
+
+				// lock the OpenGL texture for use by OpenCL
+				cast_rays.LockOpenGLObject(image.texBuffer);
+				// execute the kernel
+				cast_rays.Execute(workSize, localSize);
+				// unlock the OpenGL texture so it can be used for drawing a quad
+				cast_rays.UnlockOpenGLObject(image.texBuffer);
+
+
+
+			}
+
+
+
 
 
 
